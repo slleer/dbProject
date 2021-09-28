@@ -9,7 +9,7 @@ def parseCommand(command):
         print("Syntax Error. Fix statement and try again.")
     return currentCommand
 
-
+    
     ## maybe use a list/array for above commands, check if first word in command is in list
     ## if in list then command syntax is off to a good start, otherwise can reject command 
     ## need to find a way to return index of matching command if true
@@ -61,20 +61,3 @@ def getTableAttributes(command):
     attributes = command[command.find("(")+1:command.find(");")]
     return attributes.split(",")
 
-
-currentDB = ""
-newDB = "dbMgnt0"
-newDB = createDB(newDB)
-atts = "(bort varchar(23), trob int);"
-createTable("x", atts, newDB)
-a = "create table jack121 (cart varchar(12), time int(10));"
-b = a.split()
-newTbl = b[2]
-attributes = ""
-c = 3
-while(c != (len(b))):
-    attributes += b[c]
-    c += 1
-createTable(newTbl, attributes, newDB)
-createTable(newTbl, attributes, newDB)
-selectData(newDB, newTbl)
