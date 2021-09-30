@@ -61,7 +61,6 @@ def getTableAttributes(command):
     attributes = command[command.find("(")+1:command.find(");")]
     return attributes.split(",")
 
-
 currentDB = ""
 newDB = "dbMgnt0"
 newDB = createDB(newDB)
