@@ -1,0 +1,10 @@
+﻿This project was implemented using python 3.8 on ubuntu. For optimal performance, run dbms.py (python3 dbms.py on terminal) from the project folder and input commands as you would a sql database. 
+
+
+The project works by creating directories for databases and files for the tables within a directory. In a later version of the project, there will be an internal memory system as well, only keeping track of which databases exist and what tables they have associated with them. Some of this functionality is partially implemented in the current project, however it does not interfere with functionality. When the program is running new databases will appear as folders within the project1 folder that the files are currently stored in. The program gets the current directory during runtime to ensure that it runs correctly, however, if the program files were to be moved and the database directories and their subsequent files were not moved with them, the data would no longer be accessible to the program, this will be fixed in later versions. 
+
+
+Thank you and enjoy using my program.
+
+
+Stephen Leer

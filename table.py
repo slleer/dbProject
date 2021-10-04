@@ -1,3 +1,6 @@
+# Author: Stephen Leer
+# Date 9/29/21
+# version 1.2
 class Table:
     def __init__(self, name, atts):
         self.name = name

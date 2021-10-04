@@ -1,4 +1,7 @@
-form table import Table
+# Author: Stephen Leer
+# date: 9/29/21
+# version: 1.1
+from table import Table
 class Database:
 
     def __init__(self, db):
@@ -15,5 +18,5 @@ class Database:
             print("!Failed to delete", tbl, "because it does not exist.", sep=' ')
              
     def __eq__(self, other):
-        return self.name == other.name
+        return self.name == other
 
