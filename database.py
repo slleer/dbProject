@@ -2,6 +2,8 @@
 # date: 9/29/21
 # version: 1.1
 from table import Table
+
+
 class Database:
 
     def __init__(self, db):
