@@ -1,29 +1,55 @@
 # Author: Stephen Leer
 # Date 9/29/21
 # version 1.2
-class Table:
-    def __init__(self, name, atts):
-        self.name = name
-        self.attributeNames = []
-        self.attributeTypes = []
-        self.typeValues = []        
-        for x in atts:
-            tempName, tempType = x.split()
-            self.attributeNames.append(tempName)
-            self.attributeTypes.append(tempType)
-            if(tempType.find('(') >= 0):
-                self.typeValues.append(int(tempType[tempType.find('(')+1:tempType.find(')')]))
-            else:
-                self.typeValues.append(0)
+from typeInterface import *
 
-    def printAttributes(self):
-        index = 1
-        for x in range(len(self.attributeNames)):
-            print(self.attributeNames[x], self.attributeTypes[x], sep=' ', end='')
-            if(index < len(self.attributeNames)):
-                print(", ", end='')
+
+
+class Table:
+    def __init__(self, name, attributes):
+        self.name = name
+        self.attributes = []
+        for name_type_pair in attributes:
+            self.attributes.append(self.get_data_type(name_type_pair))
+
+    def test_table_data(self, data):
+        for x in range(len(data)):
+            if not self.attributes[x].check_type(data[x]):
+                print("Syntax error, {0} is not of type {1}.".format(data[x], self.attributes[x].attribute_type))
+                return False
+        return True
+
+    def print_attributes(self):
+        index = 0
+        for attribute in self.attributes:
+            print(attribute, end='')
+            if index < len(self.attributes)-1:
+                print(" | ", end='')
+                index += 1
             else:
                 print('\n', end='')
+
+
+    def get_data_type(self, attribute):
+        temp_name, temp_type = attribute.split()
+        type_value = -1
+        if temp_type.find('(') >= 0:
+            type_value = int(temp_type[temp_type.find('(') + 1:temp_type.find(')')])
+            temp_type = temp_type.split("(")[0]
+        if temp_type.lower() == "varchar":
+            return VarcharType(temp_name, type_value)
+        elif temp_type.lower() == "char":
+            return CharType(temp_name, type_value)
+        elif temp_type.lower() == "int":
+            return IntegerType(temp_name)
+        elif temp_type.lower() == "float":
+            return FloatType(temp_name)
+        elif temp_type.lower() == "bool" or temp_type.lower() == "boolean":
+            return BooleanType(temp_name)
+        elif temp_type.lower() == "text":
+            return TextType(temp_name, type_value)
+        else:
+            print("Syntax error, attribute {0} of type {1} is not supported type. ()()()()()()".format(temp_name, temp_type))
 
         
             
