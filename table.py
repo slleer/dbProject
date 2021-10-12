@@ -29,6 +29,14 @@ class Table:
             else:
                 print('\n', end='')
 
+    def append_attribute(self, attribute):
+        self.attributes.append(self.get_data_type(attribute))
+
+    def remove_attribute(self, attribute_name):
+        for attribute in self.attributes:
+            if attribute_name == attribute.name:
+                attribute_index = self.attributes.index(attribute)
+                self.attributes.pop(attribute_index)
 
     def get_data_type(self, attribute):
         temp_name, temp_type = attribute.split()

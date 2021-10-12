@@ -90,33 +90,41 @@ class DatabaseManagementSystem:
                 file_path = os.path.join(os.path.abspath(os.getcwd()), self.cur_db)
                 table_to_read = command.split()[command.split().index("from")].rstrip(';')
                 if os.path.isfile(os.path.join(file_path, table_to_read)):
+                    file_path = os.path.join(file_path, table_to_read)
                     if command.split()[1] == '*':
-                        self.select_all_data(table_to_read)
+                        if "where" not in command.lower():
+                            with open(file_path, 'r') as file_to_read:
+                                print(file_to_read.read())
+                        else:
+                            print("can't handle conditionals yet.... please implement. ")
                     else:
-                        self.select_specific_data(command, table_to_read)
+                        index = self.get_indices(command.split(), 1, command.split().index("from"))
+                        conditionals = []
+                        table_obj = None
+                        for db in self.db:
+                            if db.name == self.cur_db:
+                                for tbl in db.table:
+                                    if tbl.name == table_to_read:
+                                        table_obj = tbl
+                        if "where" not in command.lower():
+                            command_column = []
+                            for i in index:
+                                command_column.append(command.split()[i].rstrip(","))
+                            table_column = self.get_indices_with_match(command_column, table_obj)
+                        else:
+                            conditionals = self.get_indices(command, command.lower().split().index("where") + 1)
+                            print("need to finish implementing the conditional nature of this command")
+
                 else:
                     print("!Failed to query table {} because it does not exist".format(table_to_read))
             except:
                 print("Syntax error, please review statement and try again.")
 
-    def select_specific_data(self, command, table):
-        index = self.get_indices(command.split(), 1, command.split().index("from"))
-        conditionals = []
-        table_obj = None
-        for db in self.db:
-            if db.name == self.cur_db:
-                for tbl in db.table:
-                    if tbl.name == table:
-                        table_obj = tbl
-        if "where" in command.lower():
-            conditionals = self.get_indices(command, command.lower().split().index("where"))
+    def get_indices_with_match(self, columns, table):
 
-    def get_indices_with_match(self, command, argument, command_index):
-        # need to build out function so that it will return the indices of the table attributes that are
-        # included in the command EX:::: select NAME, PRICE from table
-        # command_index will be list of indices for which words on commnand to compare with the attributes passed
-        # in argument.
-        pass
+        for attribute in table.attributes:
+            for col in columns:
+                if col ==
 
     def get_indices(self, command, lower_bound = None, upper_bound = None):
         indices = []
@@ -294,11 +302,15 @@ class DatabaseManagementSystem:
         return Database(db.rstrip(';'))
 
     # helper method used when all elements of a table are needed
-    def select_all_data(self, tbl):
+    def select_all_data(self, command, tbl):
         filePath = os.path.join(os.path.abspath(os.getcwd()),self.cur_db)
         filePath = os.path.join(filePath, tbl)
-        with open(filePath, 'r') as f:
-            print(f.read())
+        if "where" not in command.lower():
+            with open(filePath, 'r') as f:
+                print(f.read())
+        else:
+            print("can't handle conditionals yet.... please implement. ")
+
     # helper method for parsing the input command further for easy access to the
     # table attributes upon table creation
     def getTableAttributes(self, command):
