@@ -106,25 +106,40 @@ class DatabaseManagementSystem:
                                 for tbl in db.table:
                                     if tbl.name == table_to_read:
                                         table_obj = tbl
-                        if "where" not in command.lower():
-                            command_column = []
-                            for i in index:
-                                command_column.append(command.split()[i].rstrip(","))
-                            table_column = self.get_indices_with_match(command_column, table_obj)
-                        else:
-                            conditionals = self.get_indices(command, command.lower().split().index("where") + 1)
+                        #if "where" not in command.lower():
+                        command_column = []
+                        for i in index:
+                            command_column.append(command.split()[i].rstrip(","))
+                        table_columns = self.get_indices_with_match(command_column, table_obj)
+
+                        if "where" in command.lower():
+                            condition_indices = self.get_indices(command, command.lower().split().index("where") + 1)
+                            for i in condition_indices:
+                                conditionals.append(command.split()[i])
                             print("need to finish implementing the conditional nature of this command")
+
+                        with open(file_path, 'r') as file_to_read:
+                            for data_item in file_to_read:
+                                if(not bool(conditionals) or self.condition_met(data_item, conditionals, table_obj)):
+                                    data_pieces = data_item.split("|")
+                                    # need to print only the pieces that match with the table columns indices returned
+
 
                 else:
                     print("!Failed to query table {} because it does not exist".format(table_to_read))
             except:
                 print("Syntax error, please review statement and try again.")
-
+    def condition_met(self, data, conditions, table):
+        pass
     def get_indices_with_match(self, columns, table):
-
+        attribute_col_index = []
+        index = 0
         for attribute in table.attributes:
             for col in columns:
-                if col ==
+                if col == attribute.attribute_name:
+                    attribute_col_index.append(index)
+            index += 1
+        return attribute_col_index
 
     def get_indices(self, command, lower_bound = None, upper_bound = None):
         indices = []
