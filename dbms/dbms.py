@@ -18,8 +18,8 @@ class DatabaseManagementSystem:
                                3: self.updateCommand,
                                4: self.useCommand,
                                5: self.selectCommand,
-                               6: self.exitCommand,
-                               7: self.insertCommand,
+                               6: self.insertCommand,
+                               7: self.exitCommand,
                                8: self.listTables,
                                9: self.listDatabases}
         self.initializeDatabase()
@@ -47,16 +47,13 @@ class DatabaseManagementSystem:
             cw_dir = os.path.join(cw_dir, table)
             # tbl = self.db[self.db.index(self.cur_db)] --------- need to refactor changing self.cur_db from str to db object. will make life lots easier
             for db in self.db:
-                print(db.name, self.cur_db, sep=" ---- ")
                 if db.name == self.cur_db:
                     for tbl in db.table:
-                        print(table, tbl.name, sep=" -- ")
                         if tbl.name == table:
                             if tbl.test_table_data(table_data):
                                 with open(cw_dir, 'a') as table_to_append:
                                     table_to_append.write("\n")
                                     table_to_append.write(" | ".join(table_data))
-                                    print(" | ".join(table_data))
                                     return
         else:
             print('!Failed to insert data, please review statement and try again.')
@@ -86,51 +83,59 @@ class DatabaseManagementSystem:
         if not self.cur_db:
             print("No DATABASE selected, select DATABASE using USE command and try again")
         else:
-            try:
-                file_path = os.path.join(os.path.abspath(os.getcwd()), self.cur_db)
-                table_to_read = command.split()[command.split().index("from")].rstrip(';')
-                if os.path.isfile(os.path.join(file_path, table_to_read)):
-                    file_path = os.path.join(file_path, table_to_read)
-                    if command.split()[1] == '*':
-                        if "where" not in command.lower():
-                            with open(file_path, 'r') as file_to_read:
-                                print(file_to_read.read())
-                        else:
-                            print("can't handle conditionals yet.... please implement. ")
-                    else:
-                        index = self.get_indices(command.split(), 1, command.split().index("from"))
-                        conditionals = []
-                        table_obj = None
-                        for db in self.db:
-                            if db.name == self.cur_db:
-                                for tbl in db.table:
-                                    if tbl.name == table_to_read:
-                                        table_obj = tbl
-                        #if "where" not in command.lower():
-                        command_column = []
-                        for i in index:
-                            command_column.append(command.split()[i].rstrip(","))
-                        table_columns = self.get_indices_with_match(command_column, table_obj)
-
-                        if "where" in command.lower():
-                            condition_indices = self.get_indices(command, command.lower().split().index("where") + 1)
-                            for i in condition_indices:
-                                conditionals.append(command.split()[i])
-                            print("need to finish implementing the conditional nature of this command")
-
+            #try:
+            file_path = os.path.join(os.path.abspath(os.getcwd()), self.cur_db)
+            table_to_read = command.split()[command.split().index("from")+1].rstrip(';')
+            if os.path.isfile(os.path.join(file_path, table_to_read)):
+                file_path = os.path.join(file_path, table_to_read)
+                if command.split()[1] == '*':
+                    if "where" not in command.lower():
                         with open(file_path, 'r') as file_to_read:
-                            for data_item in file_to_read:
-                                if(not bool(conditionals) or self.condition_met(data_item, conditionals, table_obj)):
-                                    data_pieces = data_item.split("|")
-                                    # need to print only the pieces that match with the table columns indices returned
-
-
+                            print(file_to_read.read())
+                    else:
+                        print("can't handle conditionals yet.... please implement. ")
                 else:
-                    print("!Failed to query table {} because it does not exist".format(table_to_read))
-            except:
-                print("Syntax error, please review statement and try again.")
+                    index = self.get_indices(command.split(), 1, command.split().index("from"))
+                    conditionals = []
+                    table_obj = None
+                    for db in self.db:
+                        if db.name == self.cur_db:
+                            for tbl in db.table:
+                                if tbl.name == table_to_read:
+                                    table_obj = tbl
+                    #if "where" not in command.lower():
+                    command_column = []
+                    for i in index:
+                        command_column.append(command.split()[i].rstrip(","))
+                    table_columns = self.get_indices_with_match(command_column, table_obj)
+
+                    if "where" in command.lower():
+                        condition_indices = self.get_indices(command, command.lower().split().index("where") + 1)
+                        for i in condition_indices:
+                            conditionals.append(command.split()[i].rstrip(";"))
+
+                    with open(file_path, 'r') as file_to_read:
+                        lines = file_to_read.readlines()[1:]
+                        for line in lines:
+                            if(not bool(conditionals) or self.condition_met(line.split(" | "), conditionals, table_obj)):
+                                data_pieces = line.split("|")
+                                print_str = []
+                                for i in table_columns:
+                                    print_str.append(data_pieces[i])
+                                print(" | ".join(print_str))
+
+                                # need to print only the pieces that match with the table columns indices returned
+
+
+            else:
+                print("!Failed to query table {} because it does not exist".format(table_to_read))
+            #except:
+                #print("Syntax error, please review statement and try again.")
     def condition_met(self, data, conditions, table):
-        pass
+        if len(conditions) == 3:
+            column_index = self.get_indices_with_match(conditions, table)
+            return table.check_condition(column_index[0], data[column_index[0]], conditions[1], conditions[2])
+
     def get_indices_with_match(self, columns, table):
         attribute_col_index = []
         index = 0
@@ -138,6 +143,7 @@ class DatabaseManagementSystem:
             for col in columns:
                 if col == attribute.attribute_name:
                     attribute_col_index.append(index)
+                    print(index)
             index += 1
         return attribute_col_index
 
@@ -146,7 +152,7 @@ class DatabaseManagementSystem:
         if not lower_bound:
             lower_bound = 0
         if not upper_bound:
-            upper_bound = len(command)-1
+            upper_bound = len(command.split())
         for i in range(lower_bound, upper_bound):
             indices.append(i)
         return indices
@@ -173,7 +179,7 @@ class DatabaseManagementSystem:
             print("Syntax error, please review statement and try again")
 
     # method responsible for terminating the program
-    def exitCommand(self, command):
+    def exitCommand(self):
         sys.exit()
     #method responsible for droping databases or tables
 
@@ -244,21 +250,25 @@ class DatabaseManagementSystem:
         cw_dir = os.path.abspath(os.getcwd())
         allDBs = os.listdir(cw_dir)
         for db in allDBs:
-            if os.path.isdir(os.path.join(cw_dir, db)):
+            if os.path.isdir(os.path.join(cw_dir, db)) and db[0].isalnum():
                 self.db.append(Database(db))
+        #print(len(self.db))
         for db in self.db:
-            all_tables = os.listdir(os.path.join(cw_dir, db.name))
+            db_dir = os.path.join(cw_dir, db.name)
+            all_tables = os.listdir(db_dir)
             for tbl in all_tables:
-                if os.path.isfile(tbl):
-                    with open(tbl, 'r') as table_to_read:
+               #print(tbl)
+                if os.path.isfile(os.path.join(db_dir, tbl)):
+                    with open(os.path.join(db_dir, tbl), 'r') as table_to_read:
                         table_attributes = table_to_read.readline()
                         t = Table(tbl, table_attributes.split('|'))
                         db.add(t)
+                        #print(t.print_attributes())
 
     # this method is responsible for getting the initial command form the user
     # input then returning an index so that execute can call the appropriate method
     def parseCommand(self, command):
-        validCommands = ["create", "alter", "drop", "update", "use", "select", ".exit", "insert", ".table", ".database"]
+        validCommands = ["create", "alter", "drop", "update", "use", "select", "insert", ".exit", ".table", ".database"]
         currentCommand = -1
         if(command[0].lower().rstrip(';') in validCommands):
             currentCommand = validCommands.index(command[0].lower().rstrip(';'))
@@ -299,11 +309,11 @@ class DatabaseManagementSystem:
 
     # method used to collect input from the user
     def collectInput(self):
-        command = input()
+        command = input("-->")
         if len(command) <=0:
-            command = input()
+            command = input("->")
         while command[len(command)-1] != ";":
-            command += input("---->")
+            command += input("------->")
         return command
 
     # method responsible for actual create of databases
@@ -336,6 +346,7 @@ class DatabaseManagementSystem:
 
 def main():
     dbms = DatabaseManagementSystem()
+    print("Welcome to sleerDB!:\n")
     while True:
         command = dbms.collectInput()
         commandSwitch = dbms.parseCommand(command.split())

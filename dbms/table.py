@@ -15,7 +15,7 @@ class Table:
     def test_table_data(self, data):
         for x in range(len(data)):
             if not self.attributes[x].check_type(data[x]):
-                print("Syntax error, {0} is not of type {1}.".format(data[x], self.attributes[x].attribute_type))
+                #print("Syntax error, {0} is not of type {1}.".format(data[x], self.attributes[x].attribute_type))
                 return False
         return True
 
@@ -38,6 +38,9 @@ class Table:
                 attribute_index = self.attributes.index(attribute)
                 self.attributes.pop(attribute_index)
 
+    def check_condition(self, index, col_val, condition, argument):
+        return self.attributes[index].condition_check(col_val, condition, argument)
+
     def get_data_type(self, attribute):
         temp_name, temp_type = attribute.split()
         type_value = -1
@@ -45,7 +48,7 @@ class Table:
             type_value = int(temp_type[temp_type.find('(') + 1:temp_type.find(')')])
             temp_type = temp_type.split("(")[0]
         if temp_type.lower() == "varchar":
-            return VarcharType(temp_name, type_value)
+            return VarcharType(temp_name.rjust(type_value-len(temp_name)), type_value)
         elif temp_type.lower() == "char":
             return CharType(temp_name, type_value)
         elif temp_type.lower() == "int":

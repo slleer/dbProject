@@ -1,0 +1,2 @@
+a1 int |  a2 float |  a3 varchar(20)
+2 | 23.23 | "test"

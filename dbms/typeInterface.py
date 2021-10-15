@@ -41,6 +41,23 @@ class FloatType(TypeInterface):
     def __init__(self, attribute_name, attribute_value=0):
         super().__init__(attribute_name, attribute_value, "float")
 
+    def condition_check(self, col_val, condition, argument):
+        if not self.check_type(argument):
+            return False
+        if condition == "=":
+            return float(argument) == col_val
+        elif condition == "<":
+            return float(col_val) < float(argument)
+        elif condition == ">":
+            return float(col_val) > float(argument)
+        elif condition == ">=":
+            return float(col_val) >= float(argument)
+        elif condition == "<=":
+            return float(col_val) <= float(argument)
+        else:
+            return False
+
+
     def check_type(self, attribute):
         try:
             float(attribute)
@@ -55,13 +72,21 @@ class CharType(TypeInterface):
     def __init__(self, attribute_name, attribute_value=0):
         super().__init__(attribute_name, attribute_value, "char")
 
+    def condition_check(self, col_val, condition, argument):
+        if not self.check_type(argument):
+            return False
+        if condition == "=":
+            return argument == col_val
+        else:
+            return False
+
     def check_type(self, attribute):
         if type(attribute) != str():
             print("Syntax error, {0} is not of type Char".format(attribute))
             return False
 
-        if self.attribute_value < len(attribute):
-            print("Syntax error, {0} is too large for {1} of type har({2})".format(attribute, self.attribute_name,
+        if self.attribute_value != len(attribute):
+            print("Syntax error, {0} is too large for {1} of type char({2})".format(attribute, self.attribute_name,
                                                                                    self.attribute_value))
             return False
 
@@ -73,12 +98,20 @@ class VarcharType(TypeInterface):
     def __init__(self, attribute_name, attribute_value=0):
         super().__init__(attribute_name, attribute_value, "varchar")
 
-    def check_type(self, attribute):
-        if type(attribute) != str():
-            print("Syntax error, {0} is not of type Varchar".format(attribute))
+    def condition_check(self, col_val, condition, argument):
+        if not self.check_type(argument):
+            return False
+        if condition == "=":
+            return argument == col_val
+        else:
             return False
 
-        if self.attribute_value < len(attribute):
+    def check_type(self, attribute):
+        if not isinstance(attribute, str):
+            print("Syntax error, {0} is not of type Varchar.".format(attribute))
+            return False
+
+        if self.attribute_value <= len(attribute):
             print("Syntax error, {0} is too large for {1} of type varchar({2})".format(attribute, self.attribute_name, self.attribute_value))
             return False
 
@@ -88,6 +121,22 @@ class IntegerType(TypeInterface):
 
     def __init__(self, attribute_name, attribute_value=0):
         super().__init__(attribute_name, attribute_value, "int")
+
+    def condition_check(self, col_val, condition, argument):
+        if not self.check_type(argument):
+            return False
+        if condition == "=":
+            return int(argument) == col_val
+        elif condition == "<":
+            return col_val < int(argument)
+        elif condition == ">":
+            return col_val > int(argument)
+        elif condition == ">=":
+            return col_val >= int(argument)
+        elif condition == "<=":
+            return col_val <= int(argument)
+        else:
+            return False
 
     def check_type(self, attribute):
         try:
@@ -101,6 +150,14 @@ class BooleanType(TypeInterface):
 
     def __init__(self, attribute_name, attribute_value=0):
         super().__init__(attribute_name, attribute_value, "boolean")
+
+    def condition_check(self, col_val, condition, argument):
+        if not self.check_type(argument):
+            return False
+        if condition == "=":
+            return argument.lower() == col_val.lower()
+        else:
+            return False
 
     def check_type(self, attribute):
         if attribute.lower() == "true" or attribute.lower() == 'false':
