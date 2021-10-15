@@ -24,6 +24,12 @@ class TextType(TypeInterface):
     def __init__(self, attribute_name, attribute_value=0):
         super().__init__(attribute_name, attribute_value, "text")
 
+    def condition_check(self, col_val, condition, argument):
+        if not self.check_type(argument):
+            return False
+        print("Variables of type Text are not setup for conditional arguments.")
+        return False
+
     def check_type(self, attribute):
         if type(attribute) != str():
             print("Syntax error, {0} is not of type Text".format(attribute))
@@ -54,6 +60,8 @@ class FloatType(TypeInterface):
             return float(col_val) >= float(argument)
         elif condition == "<=":
             return float(col_val) <= float(argument)
+        elif condition == "!=":
+            return float(col_val) != float(argument)
         else:
             return False
 
@@ -77,6 +85,8 @@ class CharType(TypeInterface):
             return False
         if condition == "=":
             return argument == col_val
+        elif condition == "!=":
+            return argument != col_val
         else:
             return False
 
@@ -103,6 +113,8 @@ class VarcharType(TypeInterface):
             return False
         if condition == "=":
             return argument == col_val
+        elif condition == "!=":
+            return argument != col_val
         else:
             return False
 
@@ -128,13 +140,15 @@ class IntegerType(TypeInterface):
         if condition == "=":
             return int(argument) == col_val
         elif condition == "<":
-            return col_val < int(argument)
+            return int(col_val) < int(argument)
         elif condition == ">":
-            return col_val > int(argument)
+            return int(col_val) > int(argument)
         elif condition == ">=":
-            return col_val >= int(argument)
+            return int(col_val) >= int(argument)
         elif condition == "<=":
-            return col_val <= int(argument)
+            return int(col_val) <= int(argument)
+        elif condition == "!=":
+            return int(col_val) != int(argument)
         else:
             return False
 
@@ -156,11 +170,14 @@ class BooleanType(TypeInterface):
             return False
         if condition == "=":
             return argument.lower() == col_val.lower()
+        elif condition == "!=":
+            return col_val.lower() != argument.lower()
         else:
             return False
 
     def check_type(self, attribute):
-        if attribute.lower() == "true" or attribute.lower() == 'false':
+        bool_types = ["true", "false", "0", "1"]
+        if attribute.lower() in bool_types:
             return True
         else:
             print('Syntax error, {0} is not of type Bool'.format(attribute))
