@@ -450,10 +450,8 @@ class DatabaseManagementSystem:
     # method used to collect input from the user
     def collectInput(self):
         command = input("-->")
-        if len(command) <= 0:
-            command = input("->")
-        while command[len(command)-1] != ";":
-            if command[0] == ".":
+        while len(command) <= 0 or command[len(command)-1] != ";":
+            if len(command) > 0 and command[0] == ".":
                 return command
             command += input("------->")
         return command
@@ -483,7 +481,23 @@ class DatabaseManagementSystem:
 
 def main():
     dbms = DatabaseManagementSystem()
-    print("Welcome to sleerDB!:\n")
+    print("\t\t\t\tWelcome to sleerDB!:\nTo see a list of commands and their usage, use .help\nTo import "
+          "statements from file use PIPE fileName;\n example: PIPE PA1_test.sql;")
+    #temp_line = ""
+    #for line in sys.stdin:
+    #    if len(line) > 0 and (line[0].isalpha() or line[0] == "."):
+    #        temp_line += line.rstrip()
+    #        if temp_line[len(temp_line.rstrip()) - 1] != ";":
+    #            if temp_line[0] == ".":
+    #                command_switch = dbms.parseCommand(temp_line.split())
+    #                if command_switch >= 0:
+    #                    dbms.execute(command_switch, temp_line)
+    #                    temp_line = ""
+    #        else:
+    #            command_switch = dbms.parseCommand(temp_line.split())
+    #            if command_switch >= 0:
+    #                dbms.execute(command_switch, temp_line)
+    #                temp_line = ""
     while True:
         command = dbms.collectInput()
         commandSwitch = dbms.parseCommand(command.split())
