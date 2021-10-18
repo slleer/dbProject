@@ -30,6 +30,9 @@ class TextType(TypeInterface):
         print("Variables of type Text are not setup for conditional arguments.")
         return False
 
+    def get_default_value(self):
+        return "NULL"
+
     def check_type(self, attribute):
         if type(attribute) != str():
             print("Syntax error, {0} is not of type Text".format(attribute))
@@ -65,6 +68,8 @@ class FloatType(TypeInterface):
         else:
             return False
 
+    def get_default_value(self):
+        return 0.0
 
     def check_type(self, attribute):
         try:
@@ -89,6 +94,12 @@ class CharType(TypeInterface):
             return argument != col_val
         else:
             return False
+
+    def get_default_value(self):
+        if self.attribute_value > 4:
+            return "NULL".rjust(self.attribute_value-len(self.attribute_name))
+        else:
+            return "NULL"
 
     def check_type(self, attribute):
         if type(attribute) != str():
@@ -117,6 +128,9 @@ class VarcharType(TypeInterface):
             return argument != col_val
         else:
             return False
+
+    def get_default_value(self):
+        return "NULL"
 
     def check_type(self, attribute):
         if not isinstance(attribute, str):
@@ -152,6 +166,9 @@ class IntegerType(TypeInterface):
         else:
             return False
 
+    def get_default_value(self):
+        return 0
+
     def check_type(self, attribute):
         try:
             int(attribute)
@@ -174,6 +191,9 @@ class BooleanType(TypeInterface):
             return col_val.lower() != argument.lower()
         else:
             return False
+
+    def get_default_value(self):
+        return "FALSE"
 
     def check_type(self, attribute):
         bool_types = ["true", "false", "0", "1"]

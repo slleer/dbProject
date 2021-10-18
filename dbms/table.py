@@ -41,6 +41,9 @@ class Table:
     def check_condition(self, index, col_val, condition, argument):
         return self.attributes[index].condition_check(col_val, condition, argument)
 
+    def get_default_value(self):
+        return str(self.attributes[len(self.attributes)-1].get_default_value())
+
     def get_data_type(self, attribute):
         temp_name, temp_type = attribute.split()
         type_value = -1
