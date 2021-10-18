@@ -498,6 +498,11 @@ def main():
     #            if command_switch >= 0:
     #                dbms.execute(command_switch, temp_line)
     #                temp_line = ""
+    # --- alternative approach ---
+    #if len(sys.argv) > 1:
+    #    if argv[1] is a file:
+    #        call pipe command with file name
+    
     while True:
         command = dbms.collectInput()
         commandSwitch = dbms.parseCommand(command.split())
