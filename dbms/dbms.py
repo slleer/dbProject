@@ -9,7 +9,7 @@ from table import Table
 
 
 class DatabaseManagementSystem:
-    #constructor
+    # constructor
     def __init__(self):
         self.db = []
         self.cur_db = ''
@@ -21,25 +21,28 @@ class DatabaseManagementSystem:
                                5: self.selectCommand,
                                6: self.insertCommand,
                                7: self.pipeCommand,
-                               8: self.exitCommand,
-                               9: self.listTables,
-                               10: self.listDatabases}
+                               8: self.deleteCommand,
+                               9: self.exitCommand,
+                               10: self.listTables,
+                               11: self.listDatabases,
+                               12: self.manualCommand}
         self.initializeDatabase()
+    def manualCommand(self):
+        self.print_help_manual()
 
     def listTables(self):
         if self.cur_db == "":
             print("No database selected, select database with USE command and try again.")
         else:
-            cw_dir = os.path.join(os.path.abspath(os.getcwd()), self.cur_db)
-            table_list = os.listdir(cw_dir)
-            for tbl in table_list:
-                print(tbl)
+            for db in self.db:
+                if db.name == self.cur_db:
+                    for tbl in db.table:
+                        print(tbl.name)
+                    return
 
     def listDatabases(self):
-        db_list = os.listdir(os.path.abspath(os.getcwd()))
-        for db in db_list:
-            if os.path.isdir(os.path.join(os.path.abspath(os.getcwd()), db)):
-                print(db)
+        for db in self.db:
+            print(db.name)
 
     def insertCommand(self, command):
         commands, table_data = self.get_insertion_values(command)
@@ -54,9 +57,10 @@ class DatabaseManagementSystem:
                         if tbl.name == table:
                             if tbl.test_table_data(table_data):
                                 with open(cw_dir, 'a') as table_to_append:
-                                    table_to_append.write("\n")
-                                    table_to_append.write(" | ".join(table_data))
+                                    print(" | ".join(table_data), file=table_to_append)
+                                    print("1 new record inserted.")
                                     return
+            print("!Failed to insert data into {0} because it does not exist.".format(table))
         else:
             print('!Failed to insert data, please review statement and try again.')
 
@@ -69,7 +73,93 @@ class DatabaseManagementSystem:
 
     # unused update command
     def updateCommand(self, command):
-        pass
+        cw_dir = os.path.join(os.path.abspath(os.getcwd()), self.cur_db)
+        table_to_update = command.split()[1]
+        table_dir = os.path.join(cw_dir, table_to_update)
+        update_attributes = []
+        table_obj = None
+        table_element = []
+        conditionals = []
+        try:
+            if len(command.split()) >= 10 and os.path.isfile(table_dir) and command.split()[2].lower() == "set":
+                for db in self.db:
+                    if db.name == self.cur_db:
+                        for tbl in db.table:
+                            if tbl.name.lower() == table_to_update.lower():
+                                table_obj = tbl
+                switch = True
+                for element in command.split()[3:command.lower().split().index("where")]:
+                    if element != "=":
+                        if switch:
+                            table_element.append(element)
+                            switch = not switch
+                        else:
+                            update_attributes.append(element.rstrip(","))
+                            switch = not switch
+                for conditions in command.split()[command.lower().split().index("where") + 1:]:
+                    conditionals.append(conditions.rstrip(";"))
+                if len(table_element) != len(update_attributes):
+                    print("Syntax error, please review statement and try again")
+                    return
+                with open(table_dir, "r") as in_file:
+                    first_line = in_file.readline()
+                    list_data = in_file.readlines()
+                with open(table_dir, "w") as out_file:
+                    num_tuples_updated = 0
+                    out_file.write(first_line)
+                    for lines in list_data:
+                        if self.condition_met(lines.split(" | "), conditionals, table_obj):
+                            data_pieces = lines.split("|")
+                            print_str = []
+                            num_tuples_updated += 1
+                            update_index = 0
+                            for i in range(len(table_obj.attributes)):
+                                if table_obj.attributes[i].attribute_name in table_element:
+                                    print_str.append(update_attributes[update_index])
+                                    update_index += 1
+                                else:
+                                    print_str.append(data_pieces[i])
+                            print(" | ".join(print_str), file=out_file)
+                        else:
+                            out_file.write(lines)
+                    print("{0} record(s) updated".format(num_tuples_updated))
+            else:
+                print("Syntax error, please review statement and try again.")
+        except:
+            print("Syntax error, please review alter statement and try again.")
+
+    def deleteCommand(self, command):
+        cw_dir = os.path.join(os.path.abspath(os.getcwd()), self.cur_db)
+        table_obj = None
+        conditionals = []
+        try:
+            table_to_update = command.split()[2]
+            table_dir = os.path.join(cw_dir, table_to_update)
+            if len(command.split()) >= 7 and os.path.isfile(table_dir) and command.split()[1].lower() == "from":
+                for db in self.db:
+                    if db.name == self.cur_db:
+                        for tbl in db.table:
+                            if tbl.name.lower() == table_to_update.lower():
+                                table_obj = tbl
+                for conditions in command.split()[command.lower().split().index("where") + 1:]:
+                    conditionals.append(conditions.rstrip(";"))
+                with open(table_dir, "r") as in_file:
+                    first_line = in_file.readline()
+                    list_data = in_file.readlines()
+                with open(table_dir, "w") as out_file:
+                    num_tuples_deleted = 0
+                    out_file.write(first_line)
+                    for lines in list_data:
+                        if self.condition_met(lines.split(" | "), conditionals, table_obj):
+                            num_tuples_deleted += 1
+                        else:
+                            out_file.write(lines)
+                    print("{0} record(s) deleted".format(num_tuples_deleted))
+            else:
+                print("Syntax error, please review statement and try again.")
+        except:
+            print("Syntax error, please review delete statement and try again.")
+
 
     def pipeCommand(self, command):
         if len(command.split()) > 2:
@@ -77,17 +167,24 @@ class DatabaseManagementSystem:
         file_path = os.path.join(os.path.abspath(os.getcwd()), command.split()[1].rstrip(";"))
         if os.path.isfile(file_path):
             with open(file_path, 'r') as sql_file:
-                for line in sql_file:
-                    if line[0].isalpha() or line[0] == ".":
-                        command_switch = self.parseCommand(line.split())
+                temp_line = ""
+                while True:
+                    line = sql_file.readline().strip()
+                    if len(line) > 0 and (line[0].isalpha() or line[0] == "."):
+                        temp_line = line
+                        while temp_line[len(temp_line.rstrip())-1] != ";":
+                            if temp_line[0] == ".":
+                                break
+                            temp_line += " " + sql_file.readline().strip()
+                        command_switch = self.parseCommand(temp_line.split())
                         if command_switch >= 0:
-                            self.execute(command_switch, line)
+                            self.execute(command_switch, temp_line)
 
     # execution method, this method calls the appropriate method depending on
     # the index passed in. Command is the command received from user
     
     def execute(self, index, command):
-        if index >= len(self.executeCommand)-3:
+        if index >= len(self.executeCommand)-4:
             self.executeCommand[index]()
         else:
             (self.executeCommand[index](command))
@@ -102,40 +199,36 @@ class DatabaseManagementSystem:
                 table_to_read = command.split()[command.lower().split().index("from")+1].rstrip(';')
                 if os.path.isfile(os.path.join(file_path, table_to_read)):
                     file_path = os.path.join(file_path, table_to_read)
-                    if command.split()[1] == '*':
-                        if "where" not in command.lower():
-                            with open(file_path, 'r') as file_to_read:
-                                print(file_to_read.read())
-                        else:
-                            print("can't handle conditionals yet.... please implement. ")
+                    conditionals = []
+                    table_obj = None
+                    for db in self.db:
+                        if db.name == self.cur_db:
+                            for tbl in db.table:
+                                if tbl.name.lower() == table_to_read.lower():
+                                    table_obj = tbl
+                    table_columns = []
+                    if command.split()[1] == "*":
+                        for attribute_index in range(len(table_obj.attributes)):
+                            table_columns.append(attribute_index)
                     else:
-                        index = self.get_indices(command.split(), 1, command.lower().split().index("from"))
-                        conditionals = []
-                        table_obj = None
-                        for db in self.db:
-                            if db.name == self.cur_db:
-                                for tbl in db.table:
-                                    if tbl.name == table_to_read:
-                                        table_obj = tbl
-                        command_column = []
-                        for i in index:
-                            command_column.append(command.split()[i].rstrip(","))
-                        table_columns = self.get_indices_with_match(command_column, table_obj)
-    
-                        if "where" in command.lower():
-                            condition_indices = self.get_indices(command, command.lower().split().index("where") + 1)
-                            for i in condition_indices:
-                                conditionals.append(command.split()[i].rstrip(";"))
-    
-                        with open(file_path, 'r') as file_to_read:
-                            lines = file_to_read.readlines()[1:]
-                            for line in lines:
-                                if(not bool(conditionals) or self.condition_met(line.split(" | "), conditionals, table_obj)):
-                                    data_pieces = line.split("|")
-                                    print_str = []
-                                    for i in table_columns:
-                                        print_str.append(data_pieces[i])
-                                    print(" | ".join(print_str))
+                        table_columns = self.get_indices_with_match(
+                            command.split()[1:command.lower().split().index("from")], table_obj)
+                    if "where" in command.lower():
+                        for conditions in command.split()[command.lower().split().index("where") + 1:]:
+                            conditionals.append(conditions.rstrip(";"))
+
+                    with open(file_path, 'r') as file_to_read:
+                        lines = file_to_read.readlines()
+                        first_line = True
+                        for line in lines:
+                            if not bool(conditionals) or first_line or self.condition_met(line.split(" | "),
+                                                                                          conditionals, table_obj):
+                                first_line = False
+                                data_pieces = line.split("|")
+                                print_str = []
+                                for i in table_columns:
+                                    print_str.append(data_pieces[i])
+                                print(" | ".join(print_str))
                 else:
                     print("!Failed to query table {} because it does not exist".format(table_to_read))
             except:
@@ -145,13 +238,33 @@ class DatabaseManagementSystem:
         if len(conditions) == 3:
             column_index = self.get_indices_with_match(conditions, table)
             return table.check_condition(column_index[0], data[column_index[0]], conditions[1], conditions[2])
+        elif len(conditions) > 3:
+            conditions_list = []
+            temp_conditions = conditions.copy()
+            for i in range(int(len(temp_conditions)/3)):
+                temp = []
+                for x in range(3):
+                    temp.append(temp_conditions[0])
+                    temp_conditions.pop(0)
+                if len(temp_conditions) > 0 and temp_conditions[0].lower() == "and":
+                    temp_conditions.pop(0)
+                conditions_list.append(temp)
+            condition_passed = True
+            for i in range(len(conditions_list)):
+                column_index = self.get_indices_with_match(conditions_list[i], table)
+                temp_condition = table.check_condition(column_index[0], data[column_index[0]], conditions_list[i][1], conditions_list[i][2])
+                condition_passed = condition_passed and temp_condition
+            return condition_passed
+        else:
+            return False
+
 
     def get_indices_with_match(self, columns, table):
         attribute_col_index = []
         index = 0
         for attribute in table.attributes:
             for col in columns:
-                if col == attribute.attribute_name:
+                if col.rstrip(",") == attribute.attribute_name.lstrip():
                     attribute_col_index.append(index)
             index += 1
         return attribute_col_index
@@ -174,17 +287,27 @@ class DatabaseManagementSystem:
             print("Syntax error, please review statement and try again")
         elif command.split()[1].lower() == "table":
             table_to_alter = command.split()[2].rstrip(';')
+            table_obj = None
+            for db in self.db:
+                if self.cur_db == db.name:
+                    for tbl in db.table:
+                        if tbl.name == table_to_alter:
+                            table_obj = tbl
             alteration = command.split()[3]
             if alteration.lower() == 'add':
                 file_path = os.path.join(os.path.abspath(os.getcwd()), self.cur_db)
                 if os.path.isfile(os.path.join(file_path, table_to_alter)):
                     table = os.path.join(file_path, table_to_alter)
+                    attribute = []
                     with open(table, 'a') as f:
                         f.write(" | ")
                         for alt in range(4, len(command.split())):
                             print_str = " " + command.split()[alt].rstrip(";")
                             f.write(print_str)
+                            attribute.append(command.split()[alt].rstrip(";"))
+                        table_obj.append_attribute(" ".join(attribute))
                     print("Table {0} modified.".format(table_to_alter))
+
                 else:
                     print("!Failed to alter table", table_to_alter, "because it does not exist.", sep=' ')
         else:
@@ -193,8 +316,8 @@ class DatabaseManagementSystem:
     # method responsible for terminating the program
     def exitCommand(self):
         sys.exit()
-    #method responsible for droping databases or tables
 
+    #  responsible for droping databases or tables
     def dropCommand(self, command):
         if len(command.split()) == 3:
             structureType = command.split()[1].lower()
@@ -210,8 +333,8 @@ class DatabaseManagementSystem:
                             shutil.rmtree(os.path.join(cw_dir, structureName))
                     print("Database {0} deleted.".format(structureName))
                     for db in self.db:
-                       if db.name == structureName:
-                           self.db.remove(db)
+                        if db.name == structureName:
+                            self.db.remove(db)
                     if self.cur_db == structureName:
                         self.cur_db = ''
                 else:
@@ -221,8 +344,11 @@ class DatabaseManagementSystem:
                 if os.path.isfile(os.path.join(tbl_path, structureName)):
                     os.remove(os.path.join(tbl_path, structureName))
                     print("Table {0} deleted.".format(structureName))
-                    index = self.db.index(self.cur_db)
-                    #self.db[index].remove(structureName)
+                    for db in self.db:
+                        if db.name == self.cur_db:
+                            for tbl in db.table:
+                                if tbl.name == structureName:
+                                    db.table.remove(tbl)
                 else:
                     print("!Failed to delete", structureName, "because it does not exist.", sep=" ")
             else:
@@ -230,7 +356,7 @@ class DatabaseManagementSystem:
         else:
             print("Syntax error, please review statement and try again.")
 
-    #method responsible for selecting the database
+    # method responsible for selecting the database
     def useCommand(self, command):
         cw_dir = os.path.abspath(os.getcwd())
         if len(command.split()) == 2:
@@ -283,18 +409,18 @@ class DatabaseManagementSystem:
     # this method is responsible for getting the initial command form the user
     # input then returning an index so that execute can call the appropriate method
     def parseCommand(self, command):
-        validCommands = ["create", "alter", "drop", "update", "use", "select", "insert", "pipe", ".exit", ".table", ".database"]
+        validCommands = ["create", "alter", "drop", "update", "use", "select", "insert", "pipe", "delete",
+                         ".exit", ".table", ".database", ".help"]
         currentCommand = -1
-        if(command[0].lower().rstrip(';') in validCommands):
+        if command[0].lower().rstrip(';') in validCommands:
             currentCommand = validCommands.index(command[0].lower().rstrip(';'))
         else:
             print("Syntax Error. Fix statement and try again.")
         return currentCommand
 
-	    
-    ## maybe use a list/array for above commands, check if first word in command is in list
-    ## if in list then command syntax is off to a good start, otherwise can reject command
-    ## need to find a way to return index of matching command if true
+    # maybe use a list/array for above commands, check if first word in command is in list
+    # if in list then command syntax is off to a good start, otherwise can reject command
+    # need to find a way to return index of matching command if true
     # method responsible for the actual creation of a table
     def createTable(self, new_table, table_attributes, currentDB):
         dbPath = os.path.join(currentDB, new_table)
@@ -302,7 +428,7 @@ class DatabaseManagementSystem:
             print("!Failed to create table {} because it already exists.".format(new_table))
         else:
             with open(dbPath, 'w') as table_file:
-                table_file.write(" | ".join(table_attributes))
+                print(" | ".join(table_attributes), file=table_file)
             db_index = None
             print("Table {0} created.".format(new_table))
             for data_base in self.db:
@@ -324,9 +450,11 @@ class DatabaseManagementSystem:
     # method used to collect input from the user
     def collectInput(self):
         command = input("-->")
-        if len(command) <=0:
+        if len(command) <= 0:
             command = input("->")
         while command[len(command)-1] != ";":
+            if command[0] == ".":
+                return command
             command += input("------->")
         return command
 
@@ -342,14 +470,10 @@ class DatabaseManagementSystem:
         return Database(db.rstrip(';'))
 
     # helper method used when all elements of a table are needed
-    def select_all_data(self, command, tbl):
-        filePath = os.path.join(os.path.abspath(os.getcwd()),self.cur_db)
-        filePath = os.path.join(filePath, tbl)
-        if "where" not in command.lower():
-            with open(filePath, 'r') as f:
-                print(f.read())
-        else:
-            print("can't handle conditionals yet.... please implement. ")
+    def print_help_manual(self):
+        filePath = os.path.join(os.path.abspath(os.getcwd()), "sdb_manual")
+        with open(filePath, 'r') as f:
+            print(f.read())
 
     # helper method for parsing the input command further for easy access to the
     # table attributes upon table creation

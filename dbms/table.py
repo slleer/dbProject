@@ -48,9 +48,9 @@ class Table:
             type_value = int(temp_type[temp_type.find('(') + 1:temp_type.find(')')])
             temp_type = temp_type.split("(")[0]
         if temp_type.lower() == "varchar":
-            return VarcharType(temp_name.rjust(type_value-len(temp_name)), type_value)
+            return VarcharType(temp_name, type_value)
         elif temp_type.lower() == "char":
-            return CharType(temp_name, type_value)
+            return CharType(temp_name.rjust(type_value-len(temp_name)), type_value)
         elif temp_type.lower() == "int":
             return IntegerType(temp_name)
         elif temp_type.lower() == "float":

@@ -51,7 +51,7 @@ class FloatType(TypeInterface):
         if not self.check_type(argument):
             return False
         if condition == "=":
-            return float(argument) == col_val
+            return float(argument) == float(col_val)
         elif condition == "<":
             return float(col_val) < float(argument)
         elif condition == ">":
@@ -112,7 +112,7 @@ class VarcharType(TypeInterface):
         if not self.check_type(argument):
             return False
         if condition == "=":
-            return argument == col_val
+            return argument.strip() == col_val.strip()
         elif condition == "!=":
             return argument != col_val
         else:
@@ -138,7 +138,7 @@ class IntegerType(TypeInterface):
         if not self.check_type(argument):
             return False
         if condition == "=":
-            return int(argument) == col_val
+            return int(argument) == int(col_val)
         elif condition == "<":
             return int(col_val) < int(argument)
         elif condition == ">":

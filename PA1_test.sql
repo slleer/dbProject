@@ -24,7 +24,7 @@ SELECT * FROM tbl_1;
 CREATE TABLE tbl_1 (a3 float, a4 char(20));
 SELECT * FROM tbl_1;
 
-.EXIT;
+.EXIT
 
 -- Expected output
 --

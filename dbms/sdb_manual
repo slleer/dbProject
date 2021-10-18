@@ -1,0 +1,119 @@
+--------------------SleerDB USER MANUAL--------------------
+SleerDB is a sqlite knock off that uses the host machine's
+file system as the basis for a database management system.
+
+-----------------------------------------------------------
+                     Utility Commands
+-----------------------------------------------------------
+list database:                                    .database
+- will list all databases -
+
+list tables:                                         .table
+- will list all tables for selected database -
+
+exit program:                                         .exit
+- will exit program -
+
+display user manual:                                  .help
+- displays this manual -
+
+import file:                                pipe fileName;
+- will import and execute statements from file fileName -
+
+-----------------------------------------------------------
+                    SQL-style Command
+-----------------------------------------------------------
+===========================================================
+create database/table:
+-----------------------------------------------------------
+CREATE DATABASE databaseName;
+CREATE TABLE tableName (n1 type, n2 type, ...);
+-----------------------------------------------------------
+- Database databaseName must first be selected before
+    table creation is possible -
+- type must be one of: char(size), varchar(size), float,
+    int, bool -
+- char and varchar type variables must be enclosed with
+    single quotes, ex: 'example', the use of double
+    quotes might result in unexpected behavior -
+===========================================================
+use database:
+-----------------------------------------------------------
+USE databaseName;
+-----------------------------------------------------------
+- will only select database if it has been created -
+===========================================================
+insert data into table:
+-----------------------------------------------------------
+INSERT INTO tableName VALUES(1, 'value2', 3.0, ...);
+-----------------------------------------------------------
+- tableName must be valid table -
+- values must match expected type for table and column
+    position -
+- only one insertion at a time is possible at this time -
+===========================================================
+select data from table:
+-----------------------------------------------------------
+SELECT columns FROM tableName;
+-----------------------------------------------------------
+- columns must be one or more column names associated with
+    tableName -
+- to select all columns associated with tableName, use the
+    * character, without quotes, instead of specifying a
+    column name -
+===========================================================
+add column to table:
+-----------------------------------------------------------
+ALTER TABLE tableName ADD name type;
+-----------------------------------------------------------
+- tableName must be a valid table -
+- name is the name of the variable/column of table to add -
+- type is the type of name -
+- NOTE: at this time, there is no way to remove a column,
+    instead you must create a new table and copy data to
+    the new table from the one you wish to modify. -
+===========================================================
+delete a database/table:
+-----------------------------------------------------------
+DROP DATABASE databaseName;
+DROP TABLE tableName;
+-----------------------------------------------------------
+- databaseName must be valid database -
+- database must be selected to delete table -
+- tableName must be valid table -
+===========================================================
+update the values of a tuple in table
+-----------------------------------------------------------
+UPDATE tableName SET name = value WHERE column condition value;
+                        EXAMPLE
+UPDATE tb_1 SET p_name = 'tent' WHERE p_price <= 19.99;
+
+UPDATE tb_1 SET p_name = 'tent', p_store = 'camping store'
+     WHERE p_price <= 19.99 AND p_id != 6;
+-----------------------------------------------------------
+- tableName must be valid table -
+- name is the column whose to replace with value. String
+    values must be enclosed in single quotes only -
+- column is the name of the variable to be compared against
+    condition is the conditional statement (=, !=, <, >,
+    <=, >=), and value is that value to be compared with
+     the column -
+- multiple columns can be updated in a single statement,
+    use a comma, to separate them -
+- multiple conditions can be used to check data, separate
+    additional conditions with the word and -
+===========================================================
+delete a tuple from a table:
+-----------------------------------------------------------
+DELETE FROM tableName WHERE column condition value;
+                       EXAMPLE
+DELETE FROM tb_1 WHERE p_price > 200.0;
+
+DELETE FROM tb_1 WHERE p_price > 150.0 AND p_name = 'tent'
+-----------------------------------------------------------
+- column is the name of the variable to be compared against
+    condition is the conditional statement (=, !=, <, >,
+    <=, >=), and value is that value to be compared with
+     the column -
+- multiple conditions can be used to check data, separate
+    additional conditions with the word AND -
