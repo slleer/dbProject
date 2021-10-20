@@ -4,7 +4,6 @@
 from typeInterface import *
 
 
-
 class Table:
     def __init__(self, name, attributes):
         self.name = name
@@ -12,13 +11,15 @@ class Table:
         for name_type_pair in attributes:
             self.attributes.append(self.get_data_type(name_type_pair))
 
+    # method used on insert command to ensure the data matches the intended column
     def test_table_data(self, data):
         for x in range(len(data)):
             if not self.attributes[x].check_type(data[x]):
-                #print("Syntax error, {0} is not of type {1}.".format(data[x], self.attributes[x].attribute_type))
+                print("Syntax error, {0} is not of type {1}.".format(data[x], self.attributes[x].attribute_type))
                 return False
         return True
 
+    # method used to print the table attributes. Though it is not actually called in the dbms
     def print_attributes(self):
         index = 0
         for attribute in self.attributes:
@@ -29,21 +30,28 @@ class Table:
             else:
                 print('\n', end='')
 
+    # helper method used when alter is called to add the new attribute to the table object
     def append_attribute(self, attribute):
         self.attributes.append(self.get_data_type(attribute))
 
+    # helper method used to remove an attribute from a table object, though not used.
     def remove_attribute(self, attribute_name):
         for attribute in self.attributes:
             if attribute_name == attribute.name:
                 attribute_index = self.attributes.index(attribute)
                 self.attributes.pop(attribute_index)
 
+    # helper method used to ensure a condition is met for the select, update, and delete commands.
     def check_condition(self, index, col_val, condition, argument):
         return self.attributes[index].condition_check(col_val, condition, argument)
 
+    # helper method used for returning a default value when alter table adds a new column, this is
+    # only called if the table being altered already has data inserted
     def get_default_value(self):
         return str(self.attributes[len(self.attributes)-1].get_default_value())
 
+    # helper method used to create the necessary typeInterface object (object representing the column
+    # types) for a table on table creation, alteration.
     def get_data_type(self, attribute):
         temp_name, temp_type = attribute.split()
         type_value = -1

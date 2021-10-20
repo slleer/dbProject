@@ -1,0 +1,10 @@
+﻿This project was implemented using python 3.8 on ubuntu. To run the program, run dbms.py (on terminal: python3 dbms.py <optional_test_script.sql>) from the project folder. If you choose not to pass the test script as a command line argument, you can pipe the test script into the program once it is running, “pipe test_script.sql;” 
+Try typing “.help” while the program is running to see a simple manual for the database management system, including a list of additional commands that were implemented. 
+
+The project works by creating directories for databases and files for the tables within a directory. When the program is running new databases will appear as folders within the project2 folder. The program uses file path commands to ensure that the databases (folders) and tables (files) that are being manipulated by the program are only those within the same directory as the project files. This is to ensure that other files and directories do not get manipulated accidentally by the program. This version of the database management system implements an internal system that keeps track of each database and its respective tables, including table attribute names and types. This is used throughout the program for type verification and similar utility operations. The current version supports inserting, selecting, updating, deleting data from a given table and each of these commands (except insert) supports conditional statements.
+
+
+Thank you and enjoy using my program.
+
+
+Stephen Leer
