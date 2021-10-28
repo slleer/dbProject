@@ -20,5 +20,11 @@ class Database:
             print("!Failed to delete", tbl, "because it does not exist.", sep=' ')
              
     def __eq__(self, other):
-        return self.name == other
+        if isinstance(other, str):
+            return self.name.lower() == other.lower()
+        elif isinstance(other, Database):
+            return self.name.lower() == other.name.lower()
+
+    def __str__(self):
+        return self.name
 

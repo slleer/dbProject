@@ -11,6 +11,15 @@ class Table:
         for name_type_pair in attributes:
             self.attributes.append(self.get_data_type(name_type_pair))
 
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.name.lower() == other.lower()
+        elif isinstance(other, Table):
+            return self.name.lower() == other.name.lower()
+
+    def __str__(self):
+        return self.name
+
     # method used on insert command to ensure the data matches the intended column
     def test_table_data(self, data):
         for x in range(len(data)):
@@ -21,14 +30,10 @@ class Table:
 
     # method used to print the table attributes. Though it is not actually called in the dbms
     def print_attributes(self):
-        index = 0
+        printable_attributes = []
         for attribute in self.attributes:
-            print(attribute, end='')
-            if index < len(self.attributes)-1:
-                print(" | ", end='')
-                index += 1
-            else:
-                print('\n', end='')
+            printable_attributes.append(str(attribute))
+        print(" | ".join(printable_attributes))
 
     # helper method used when alter is called to add the new attribute to the table object
     def append_attribute(self, attribute):
