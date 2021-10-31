@@ -42,7 +42,7 @@ class Table:
     # helper method used to remove an attribute from a table object, though not used.
     def remove_attribute(self, attribute_name):
         for attribute in self.attributes:
-            if attribute_name == attribute.name:
+            if attribute_name == attribute.attribute_name:
                 attribute_index = self.attributes.index(attribute)
                 self.attributes.pop(attribute_index)
 
@@ -76,7 +76,7 @@ class Table:
         elif temp_type.lower() == "text":
             return TextType(temp_name, type_value)
         else:
-            print("Syntax error, attribute {0} of type {1} is not supported type. ()()()()()()".format(temp_name, temp_type))
+            print("Syntax error, attribute {0} of type {1} is not supported type.".format(temp_name, temp_type))
 
         
             

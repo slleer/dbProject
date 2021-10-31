@@ -143,6 +143,7 @@ class VarcharType(TypeInterface):
 
         return True
 
+
 class IntegerType(TypeInterface):
 
     def __init__(self, attribute_name, attribute_value=0):
