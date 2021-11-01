@@ -24,7 +24,7 @@ import file:                                pipe fileName;
                     SQL-style Command
 -----------------------------------------------------------
 ===========================================================
-create database/table:
+                  create database/table:
 -----------------------------------------------------------
 CREATE DATABASE databaseName;
 CREATE TABLE tableName (n1 type, n2 type, ...);
@@ -37,7 +37,7 @@ CREATE TABLE tableName (n1 type, n2 type, ...);
     single quotes, ex: 'example', the use of double
     quotes might result in unexpected behavior -
 ===========================================================
-use database:
+                    use database:
 -----------------------------------------------------------
 USE databaseName;
 -----------------------------------------------------------
@@ -52,7 +52,7 @@ INSERT INTO tableName VALUES(1, 'value2', 3.0, ...);
     position -
 - only one insertion at a time is possible at this time -
 ===========================================================
-select data from table:
+                select data from table:
 -----------------------------------------------------------
 SELECT columns FROM tableName;
 -----------------------------------------------------------
@@ -62,7 +62,7 @@ SELECT columns FROM tableName;
     * character, without quotes, instead of specifying a
     column name -
 ===========================================================
-add column to table:
+                 add column to table:
 -----------------------------------------------------------
 ALTER TABLE tableName ADD name type;
 -----------------------------------------------------------
@@ -73,7 +73,7 @@ ALTER TABLE tableName ADD name type;
     instead you must create a new table and copy data to
     the new table from the one you wish to modify. -
 ===========================================================
-delete a database/table:
+                 delete a database/table:
 -----------------------------------------------------------
 DROP DATABASE databaseName;
 DROP TABLE tableName;
@@ -82,7 +82,7 @@ DROP TABLE tableName;
 - database must be selected to delete table -
 - tableName must be valid table -
 ===========================================================
-update the values of a tuple in table
+           update the values of a tuple in table
 -----------------------------------------------------------
 UPDATE tableName SET name = value WHERE column condition value;
                         EXAMPLE
@@ -103,7 +103,7 @@ UPDATE tb_1 SET p_name = 'tent', p_store = 'camping store'
 - multiple conditions can be used to check data, separate
     additional conditions with the word and -
 ===========================================================
-delete a tuple from a table:
+              delete a tuple from a table:
 -----------------------------------------------------------
 DELETE FROM tableName WHERE column condition value;
                        EXAMPLE
@@ -117,3 +117,33 @@ DELETE FROM tb_1 WHERE p_price > 150.0 AND p_name = 'tent'
      the column -
 - multiple conditions can be used to check data, separate
     additional conditions with the word AND -
+===========================================================
+                    join two Tables
+-----------------------------------------------------------
+SELECT * FROM tbl_a a, tbl_b b WHERE a.col condition b.col
+
+SELECT * FROM t_a a INNER JOIN t_b b WHERE a.col condition b.col
+
+SELECT * FROM tbl_a a JOIN tbl_b b WHERE a.col condition b.col
+
+SELECT * FROM t_a a LEFT OUTER JOIN t_b b WHERE a.col condition b.col
+
+___________________________________________________________
+- tbl_a, t_a are the first table to join, and tbl_b, t_b are
+    the second table
+- a, b are variables chosen by user to identify which table
+    the columns (col) should be selected from in the
+    conditional statement (following the WHERE clause)
+- condition can be any condition [=, <, >, ...] supported
+    by the single table selection that makes sense for the
+    given variable. I.E. >= not recommended for CHAR,
+    VARCHAR, BOOL, and similar.
+_ like the single table selection command, JOIN accepts
+    individual table column selection, as well as all (*)
+- LEFT OUTER JOIN will return all rows from left table as
+    well as any matches found with the conditional statement
+    in the right table.
+_ INNER JOIN, JOIN, and comma separated tables all function
+    the same way, returning only those rows from each table
+    that satisfy the conditional statement (following WHERE
+    clause)
