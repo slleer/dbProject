@@ -174,8 +174,6 @@ class InnerJoinSelection(ISelection):
             print("Syntax error, failed to join tables.")
 
 
-
-
 class LeftOuterJoinSelection(ISelection):
     def select_data(self, command, db):
         try:
@@ -253,30 +251,37 @@ class LeftOuterJoinSelection(ISelection):
                 print_str.clear()
                 for line_a in lines_a:
                     data_a = line_a.split(" | ")
-                    if not table_a_columns:
-                        print_str.append(line_a.strip())
-                    else:
-                        for i in table_a_columns:
-                            print_str.append(data_a[i].strip())
                     table_b_added = False
                     for line_b in lines_b:
                         data_b = line_b.split(" | ")
                         if table_a.check_condition(
                                 table_a_index, data_a[table_a_index], conditionals[1], data_b[table_b_index]):
-                            table_b_added = not table_b_added
+                            table_b_added = True
+                            if not table_a_columns:
+                                print_str.append(line_a.strip())
+                            else:
+                                for i in table_a_columns:
+                                    print_str.append(data_a[i].strip())
                             if not table_b_columns:
                                 print_str.append(line_b.strip())
                             else:
                                 for i in table_b_columns:
                                     print_str.append(data_b[i].strip())
+                            print(" | ".join(print_str))
+                            print_str.clear()
                     if not table_b_added:
+                        if not table_a_columns:
+                            print_str.append(line_a.strip())
+                        else:
+                            for i in table_a_columns:
+                                print_str.append(data_a[i].strip())
                         if not table_b_columns:
                             for ta in table_b.attributes():
                                 print_str.append('')
                         else:
                             for i in table_b_columns:
                                 print_str.append('')
-                    print(" | ".join(print_str))
+                        print(" | ".join(print_str))
                     print_str.clear()
             else:
                 print("!Failed to join tables {0}, {1} because one/both do not exist".format(table_str_a, table_str_b))
