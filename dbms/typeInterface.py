@@ -1,3 +1,6 @@
+# Author: Stephen Leer
+# Date 11/02/21
+# version 1.4
 from abc import ABC, abstractmethod
 
 

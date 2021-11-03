@@ -1,6 +1,6 @@
 # Author: Stephen Leer
-# Date 9/29/21
-# version 1.2
+# Date 11/02/21
+# version 2.7
 from typeInterface import *
 
 

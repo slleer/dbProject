@@ -1,6 +1,6 @@
 # Author: Stephen Leer
-# date: 9/29/21
-# version: 1.1
+# date: 11/02/21
+# version: 1.3
 from table import Table
 
 
