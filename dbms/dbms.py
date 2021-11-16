@@ -4,6 +4,7 @@
 import os
 import sys
 import shutil
+import time
 from database import Database
 from table import Table
 from iSelection import *
@@ -55,6 +56,7 @@ class DatabaseManagementSystem:
     def __init__(self):
         self.db = []
         self.cur_db = None
+        self.transactionID = None
         self.executeCommand = {0: self.createCommand,
                                1: self.alterCommand,
                                2: self.dropCommand,
@@ -64,11 +66,69 @@ class DatabaseManagementSystem:
                                6: self.insertCommand,
                                7: self.pipeCommand,
                                8: self.deleteCommand,
-                               9: self.exitCommand,
-                               10: self.listTables,
-                               11: self.listDatabases,
-                               12: self.manualCommand}
+                               9: self.beginTransaction,
+                               10: self.commit,
+                               11: self.exitCommand,
+                               12: self.listTables,
+                               13: self.listDatabases,
+                               14: self.manualCommand}
         self.initializeDatabase()
+
+    def beginTransaction(self, command):
+        if command.split()[1].lower().rstrip(';') == "transaction" and self.cur_db is not None:
+            self.transactionID = str(int(float(format(time.time(), '.1f'))*10))
+            print("Transaction started.")
+        elif self.cur_db is None:
+            print("No database selected, please select database before beginning transaction")
+        else:
+            print("Syntax error, please review statement and try again, {0} is not recognize.".format(command.split()[1]))
+
+    def canModify(self, table):
+        cwd = os.path.join(os.path.abspath(os.getcwd()), self.cur_db.name)
+        tbl = os.path.join(cwd, table)
+        if os.stat(tbl+'log').st_size == 0 and self.transactionID is None:
+            return True
+        elif os.stat(tbl+'log').st_size == 0 and self.transactionID is not None:
+            with open(tbl+'log', 'w') as logFile:
+                logFile.write(self.transactionID)
+            tbl_temp = tbl+'temp'
+            cwd = os.path.join(os.path.abspath(os.getcwd()), self.cur_db.name)
+            cwd_temp = os.path.join(cwd, tbl_temp)
+            if not os.path.isfile(cwd_temp):
+                shutil.copy(os.path.join(cwd, tbl), cwd_temp)
+            return True
+        else:
+            with open(tbl+'log', 'r') as logFile:
+                lockingId = logFile.readline()
+                if self.transactionID == lockingId:
+                    return True
+                else:
+                    print(f"Error: Table {table} is locked.")
+                    return False
+
+    def commit(self):
+        modifiedTables = 0
+        cwd = os.path.join(os.path.abspath(os.getcwd()), self.cur_db.name)
+        tbls = self.cur_db.table
+        logCheck = False
+        for tbl in tbls:
+            if os.stat(os.path.join(cwd, tbl.name+'log')).st_size > 0:
+                with open(os.path.join(cwd, tbl.name+'log'), 'r') as log:
+                    if self.transactionID == log.readline():
+                        logCheck = True
+            if logCheck and os.path.isfile(os.path.join(cwd, tbl.name+'temp')):
+                shutil.copy(os.path.join(cwd, tbl.name+'temp'), os.path.join(cwd, tbl.name))
+                os.remove(os.path.join(cwd, tbl.name+'temp'))
+                with open(os.path.join(cwd, tbl.name+'log'), 'w') as log:
+                    pass
+                modifiedTables += 1
+                logCheck = False
+        self.transactionID = None
+        if modifiedTables > 0:
+            print("Transaction committed.")
+        else:
+            print("Transaction aborted.")
+
 
     # prints the user manual for the dbms
     def manualCommand(self):
@@ -93,8 +153,15 @@ class DatabaseManagementSystem:
         commands, table_data = self.get_insertion_values(command)
         if commands[1].lower() == "into" and commands[3].lower() == "values":
             table = commands[2]
-            cw_dir = os.path.join(os.path.abspath(os.getcwd()), self.cur_db.name)
-            cw_dir = os.path.join(cw_dir, table.lower())
+            if self.canModify(table):
+                if self.transactionID is not None:
+                    cw_dir = os.path.join(os.path.abspath(os.getcwd()), self.cur_db.name)
+                    cw_dir = os.path.join(cw_dir, table.lower()+'temp')
+                else:
+                    cw_dir = os.path.join(os.path.abspath(os.getcwd()), self.cur_db.name)
+                    cw_dir = os.path.join(cw_dir, table.lower())
+            else:
+                return
             if table in self.cur_db.table:
                 tbl = self.cur_db.table[self.cur_db.table.index(table)]
             if tbl.test_table_data(table_data):
@@ -125,6 +192,11 @@ class DatabaseManagementSystem:
         table_element = []
         conditionals = []
         try:
+            if self.canModify(table_to_update):
+                if self.transactionID is not None:
+                    table_dir += 'temp'
+            else:
+                return
             if len(command.split()) >= 10 and os.path.isfile(table_dir) and command.split()[2].lower() == "set":
                 if table_to_update in self.cur_db.table:
                     table_obj = self.cur_db.table[self.cur_db.table.index(table_to_update)]
@@ -182,6 +254,11 @@ class DatabaseManagementSystem:
         try:
             table_to_update = command.split()[2]
             table_dir = os.path.join(cw_dir, table_to_update.lower())
+            if self.canModify(table_to_update):
+                if self.transactionID is not None:
+                    table_dir += 'temp'
+            else:
+                return
             if len(command.split()) >= 7 and os.path.isfile(table_dir) and command.split()[1].lower() == "from":
                 if table_to_update in self.cur_db.table:
                     table_obj = self.cur_db.table[self.cur_db.table.index(table_to_update)]
@@ -232,7 +309,7 @@ class DatabaseManagementSystem:
     # execution method, this method calls the appropriate command method depending on
     # the index passed in. Command is the command received from user
     def execute(self, index, command):
-        if index >= len(self.executeCommand)-4:
+        if index >= len(self.executeCommand)-5:
             self.executeCommand[index]()
         else:
             (self.executeCommand[index](command))
@@ -252,19 +329,6 @@ class DatabaseManagementSystem:
                 select = BasicSelection()
             select.select_data(command, self.cur_db)
 
-    # helper method that was used to return a list containing the index of specific elements from the command imputed
-    # by the user.
-    # Was phased out of use in favor of simpler inline code specific to the calling method
-    # will either be deleted or repurposed in next version.
-    # def get_indices(self, command, lower_bound=None, upper_bound=None):
-    #     indices = []
-    #     if not lower_bound:
-    #         lower_bound = 0
-    #     if not upper_bound:
-    #         upper_bound = len(command.split())
-    #     for i in range(lower_bound, upper_bound):
-    #         indices.append(i)
-    #     return indices
 
     # method responsible for altering a table, now adds a default value based on the type being added to all rows that
     # are already inserted when alter is executed.
@@ -276,6 +340,10 @@ class DatabaseManagementSystem:
         elif command.split()[1].lower() == "table":
             table_to_alter = command.split()[2].rstrip(';')
             table_obj = None
+            if self.canModify(table_to_alter):
+                pass
+            else:
+                return
             if table_to_alter in self.cur_db.table:
                 table_obj = self.cur_db.table[self.cur_db.table.index(table_to_alter)]
             else:
@@ -286,6 +354,8 @@ class DatabaseManagementSystem:
                 file_path = os.path.join(os.path.abspath(os.getcwd()), self.cur_db.name)
                 if os.path.isfile(os.path.join(file_path, table_to_alter.lower())):
                     table = os.path.join(file_path, table_to_alter.lower())
+                    if self.transactionID is not None:
+                        table += 'temp'
                     attribute = []
                     with open(table, 'r') as in_file:
                         content = in_file.readlines()
@@ -344,6 +414,7 @@ class DatabaseManagementSystem:
                 tbl_path = os.path.join(cw_dir, self.cur_db.name)
                 if os.path.isfile(os.path.join(tbl_path, structureName.lower())):
                     os.remove(os.path.join(tbl_path, structureName.lower()))
+                    os.remove(os.path.join(tbl_path, structureName.lower()+'log'))
                     print("Table {0} deleted.".format(structureName))
                     for tbl in self.cur_db.table:
                         if tbl.name == structureName:
@@ -358,6 +429,9 @@ class DatabaseManagementSystem:
     # method responsible for selecting the database
     def useCommand(self, command):
         cw_dir = os.path.abspath(os.getcwd())
+        if self.transactionID is not None:
+            print('Commit current transaction before switching databases.')
+            return
         if len(command.split()) == 2:
             db_to_use = command.split()[1].rstrip(';')
             if os.path.isdir(os.path.join(cw_dir, db_to_use.lower())):
@@ -400,7 +474,7 @@ class DatabaseManagementSystem:
             db_dir = os.path.join(cw_dir, db.name)
             all_tables = os.listdir(db_dir)
             for tbl in all_tables:
-                if os.path.isfile(os.path.join(db_dir, tbl)):
+                if os.path.isfile(os.path.join(db_dir, tbl)) and 'log' not in tbl and 'temp' not in tbl:
                     with open(os.path.join(db_dir, tbl), 'r') as table_to_read:
                         table_attributes = table_to_read.readline()
                         db.add(Table(tbl, table_attributes.split('|')))
@@ -408,8 +482,8 @@ class DatabaseManagementSystem:
     # this method is responsible for getting the initial command form the user
     # input then returning an index so that execute can call the appropriate method
     def parseCommand(self, command):
-        validCommands = ["create", "alter", "drop", "update", "use", "select", "insert", "pipe", "delete",
-                         ".exit", ".table", ".database", ".help"]
+        validCommands = ["create", "alter", "drop", "update", "use", "select", "insert", "pipe", "delete", "begin",
+                         "commit", ".exit", ".table", ".database", ".help"]
         currentCommand = -1
         if command[0].lower().rstrip(';') in validCommands:
             currentCommand = validCommands.index(command[0].lower().rstrip(';'))
@@ -428,6 +502,8 @@ class DatabaseManagementSystem:
             db_index = None
             print("Table {0} created.".format(new_table))
             self.db[self.db.index(currentDB)].add(Table(new_table, table_attributes))
+            with open(dbPath + 'log', 'w') as logFile:
+                pass
 
     # helper function used to ensure tables are created with only valid attribute types.
     # this prevents issues later on when inserting data, when the data is checked against it's
