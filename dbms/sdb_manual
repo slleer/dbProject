@@ -147,3 +147,30 @@ _ INNER JOIN, JOIN, and comma separated tables all function
     the same way, returning only those rows from each table
     that satisfy the conditional statement (following WHERE
     clause)
+==============================================================
+                    begin transaction
+--------------------------------------------------------------
+BEGIN TRANSACTION;
+
+--------------------------------------------------------------
+- Creates and stores a transaction id unique to the user.
+- With a transaction id, all modifications made to tables will
+    lock the respective tables to modifications by other users.
+- Modifications must be committed to take effect.
+==============================================================
+                           commit
+--------------------------------------------------------------
+COMMIT;
+
+--------------------------------------------------------------
+- All modifications made to tables during a transaction will be
+    commited to the table and persisted to disk.
+===============================================================
+                          rollback
+---------------------------------------------------------------
+ROLLBACK;
+
+---------------------------------------------------------------
+- All modifications made to tables during a transaction will be
+    aborted and lost.
+---------------------------------------------------------------

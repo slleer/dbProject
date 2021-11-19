@@ -1,6 +1,6 @@
 # Author: Stephen Leer
-# date: 11/02/21
-# version: 3.2
+# date: 11/19/21
+# version: 4.2
 import os
 import sys
 import shutil
@@ -71,7 +71,8 @@ class DatabaseManagementSystem:
                                11: self.exitCommand,
                                12: self.listTables,
                                13: self.listDatabases,
-                               14: self.manualCommand}
+                               14: self.manualCommand,
+                               15: self.rollback}
         self.initializeDatabase()
 
     def beginTransaction(self, command):
@@ -105,6 +106,28 @@ class DatabaseManagementSystem:
                 else:
                     print(f"Error: Table {table} is locked.")
                     return False
+
+    def rollback(self):
+        modifiedTables = 0
+        cwd = os.path.join(os.path.abspath(os.getcwd()), self.cur_db.name)
+        tbls = self.cur_db.table
+        logCheck = False
+        for tbl in tbls:
+            if os.stat(os.path.join(cwd, tbl.name+'log')).st_size > 0:
+                with open(os.path.join(cwd, tbl.name+'log'), 'r') as log:
+                    if self.transactionID == log.readline():
+                        logCheck = True
+            if logCheck and os.path.isfile(os.path.join(cwd, tbl.name+'temp')):
+                os.remove(os.path.join(cwd, tbl.name+'temp'))
+                with open(os.path.join(cwd, tbl.name+'log'), 'w') as log:
+                    pass
+                modifiedTables += 1
+                logCheck = False
+        self.transactionID = None
+        if modifiedTables > 0:
+            print(f"Transaction aborted, changes made to {modifiedTables} table(s) were lost.")
+        else:
+            print("Transaction aborted.")
 
     def commit(self):
         modifiedTables = 0
@@ -151,7 +174,7 @@ class DatabaseManagementSystem:
     # inserts data into table
     def insertCommand(self, command):
         commands, table_data = self.get_insertion_values(command)
-        if commands[1].lower() == "into" and commands[3].lower() == "values":
+        if len(commands) == 4 and commands[1].lower() == "into" and commands[3].lower() == "values":
             table = commands[2]
             if self.canModify(table):
                 if self.transactionID is not None:
@@ -309,7 +332,7 @@ class DatabaseManagementSystem:
     # execution method, this method calls the appropriate command method depending on
     # the index passed in. Command is the command received from user
     def execute(self, index, command):
-        if index >= len(self.executeCommand)-5:
+        if index >= len(self.executeCommand)-6:
             self.executeCommand[index]()
         else:
             (self.executeCommand[index](command))
@@ -384,7 +407,16 @@ class DatabaseManagementSystem:
 
     # method responsible for terminating the program
     def exitCommand(self):
-        sys.exit()
+        if self.transactionID is not None:
+            print("Transaction in progress, all changes will be lost if you exit without with out committing.")
+            proceed = input("Do you still with to exit? y/n")
+            if proceed.lower() == 'y':
+                self.rollback()
+                sys.exit()
+            else:
+                return
+        else:
+            sys.exit()
 
     #  method responsible for dropping databases or tables, now includes the ability to drop a database
     #  that isn't empty, deleting its tables as well (this requires an user input to confirm).
@@ -483,7 +515,7 @@ class DatabaseManagementSystem:
     # input then returning an index so that execute can call the appropriate method
     def parseCommand(self, command):
         validCommands = ["create", "alter", "drop", "update", "use", "select", "insert", "pipe", "delete", "begin",
-                         "commit", ".exit", ".table", ".database", ".help"]
+                         "commit", ".exit", ".table", ".database", ".help", "rollback"]
         currentCommand = -1
         if command[0].lower().rstrip(';') in validCommands:
             currentCommand = validCommands.index(command[0].lower().rstrip(';'))
