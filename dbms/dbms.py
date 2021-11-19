@@ -86,7 +86,7 @@ class DatabaseManagementSystem:
 
     def canModify(self, table):
         cwd = os.path.join(os.path.abspath(os.getcwd()), self.cur_db.name)
-        tbl = os.path.join(cwd, table)
+        tbl = os.path.join(cwd, table.lower())
         if os.stat(tbl+'log').st_size == 0 and self.transactionID is None:
             return True
         elif os.stat(tbl+'log').st_size == 0 and self.transactionID is not None:
