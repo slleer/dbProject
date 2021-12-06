@@ -316,7 +316,10 @@ class DatabaseManagementSystem:
             with open(file_path, 'r') as sql_file:
                 temp_line = ""
                 while True:
-                    line = sql_file.readline().strip()
+                    line = sql_file.readline()
+                    if line == '':
+                        break
+                    line = line.strip()
                     if len(line) > 0 and (line[0].isalpha() or line[0] == "."):
                         temp_line = line.rstrip()
                         while temp_line[len(temp_line.rstrip())-1] != ";":
