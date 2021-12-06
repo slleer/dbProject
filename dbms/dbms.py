@@ -135,14 +135,15 @@ class DatabaseManagementSystem:
         tbls = self.cur_db.table
         logCheck = False
         for tbl in tbls:
-            if os.stat(os.path.join(cwd, tbl.name+'log')).st_size > 0:
-                with open(os.path.join(cwd, tbl.name+'log'), 'r') as log:
+            tblname = tbl.name.lower()
+            if os.stat(os.path.join(cwd, tblname+'log')).st_size > 0:
+                with open(os.path.join(cwd, tblname+'log'), 'r') as log:
                     if self.transactionID == log.readline():
                         logCheck = True
-            if logCheck and os.path.isfile(os.path.join(cwd, tbl.name+'temp')):
-                shutil.copy(os.path.join(cwd, tbl.name+'temp'), os.path.join(cwd, tbl.name))
-                os.remove(os.path.join(cwd, tbl.name+'temp'))
-                with open(os.path.join(cwd, tbl.name+'log'), 'w') as log:
+            if logCheck and os.path.isfile(os.path.join(cwd, tblname+'temp')):
+                shutil.copy(os.path.join(cwd, tblname+'temp'), os.path.join(cwd, tblname))
+                os.remove(os.path.join(cwd, tblname+'temp'))
+                with open(os.path.join(cwd, tblname+'log'), 'w') as log:
                     pass
                 modifiedTables += 1
                 logCheck = False
