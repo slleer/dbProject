@@ -290,3 +290,44 @@ class LeftOuterJoinSelection(ISelection):
                 print("!Failed to join tables {0}, {1} because one/both do not exist".format(table_str_a, table_str_b))
         except:
             print("Syntax error, failed to join tables.")
+
+
+class CountSelection(ISelection):
+    def select_data(self, command, db):
+        count = 0
+        try:
+            file_path = os.path.join(os.path.abspath(os.getcwd()), db.name)
+            table_to_read = command.split()[command.lower().split().index("from") + 1].rstrip(';')
+            if os.path.isfile(os.path.join(file_path, table_to_read.lower())):
+                file_path = os.path.join(file_path, table_to_read.lower())
+                conditionals = []
+                table_obj = None
+                if table_to_read in db.table:
+                    table_obj = db.table[db.table.index(table_to_read)]
+                else:
+                    print(f"Table {table_to_read} is not a valid table.")
+                table_columns = []
+                if command.split()[1] == "*":
+                    for attribute_index in range(len(table_obj.attributes)):
+                        table_columns.append(attribute_index)
+                else:
+                    table_columns = get_indices_with_match(
+                        command.split()[1:command.lower().split().index("from")], table_obj)
+                if "where" in command.lower():
+                    for conditions in command.split()[command.lower().split().index("where") + 1:]:
+                        conditionals.append(conditions.rstrip(";"))
+
+                with open(file_path, 'r') as file_to_read:
+                    lines = file_to_read.readlines()
+                    first_line = True
+                    for line in lines:
+                        if not bool(conditionals) or first_line or \
+                                condition_met(line.split(" | "), conditionals, table_obj):
+                            if first_line:
+                                print("COUNT(")
+                            first_line = False
+
+            else:
+                print("!Failed to query table {} because it does not exist".format(table_to_read))
+        except:
+            print("Syntax error, failed to select from table.")
