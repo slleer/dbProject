@@ -1,4 +1,14 @@
-﻿Run/compilation
+﻿*PROJECT 4 SPECIFIC RUN INSTRUCTIONS*
+I have made 4 test scripts from the original test script provided, PA4_A1.sql, PA4_A2.sql, PA4_B1.sql, PA4_B2.sql. Each testscript is either A or B to be run on an A instance and a B instance. Each A/B testscript is numbered 1 or 2. Testscritp _A1 should be run first followed by _B1 on a separate instance/terminal, then _A2 should be run on the first instance/terminal finally followed by _B2 on the second instance/terminal. Please follow steps bellow to accomplish this.
+
+INSTANCE A:					                            INSTANCE B:
+python3 dbms.py PA4_A1.sql <enter>	                	python3 dbms.py PA4_B1.sql <enter>
+PIPE PA4_A2.sql; <enter, while running dbms.py>	        PIPE PA4_B2.sql; <enter, while running dbms.py>
+
+
+*For best performance while using multiple scripts, if using different testscripts, please ensure there are no comments on same line as command. This may cause unexpected behavior.*
+
+Run/compilation
 This project was implemented using python 3.8 on windows for ubuntu. To run the program, run dbms.py (on terminal: python3 dbms.py <optional_test_script.sql>) from the project folder. If you choose not to pass the test script as a command line argument, you can pipe the test script into the program once it is running (from terminal "python3 dbms.py" to run), “PIPE test_script.sql;”
 Try typing “.help” while the program is running to see a simple manual for the database management system, including a list of additional commands that were implemented.
 
