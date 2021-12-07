@@ -62,6 +62,22 @@ SELECT columns FROM tableName;
     * character, without quotes, instead of specifying a
     column name -
 ===========================================================
+                select with aggregates:
+-----------------------------------------------------------
+SELECT aggregate FROM tableName;
+SELECT COUNT(*) FROM tableName;
+SELECT AVG(column) FROM tableName;
+SELECT MAX(column) FROM tableName;
+-----------------------------------------------------------
+- COUNT can only accept * as argument, will count all
+    all entries in table called tableName, can accept
+    conditional statements after tableName with WHERE
+    clause -
+- column must be a column name associated with
+    table called tableName -
+- AVG will return the average value stored in column -
+- MAX will return the maximum value stored in column -
+===========================================================
                  add column to table:
 -----------------------------------------------------------
 ALTER TABLE tableName ADD name type;

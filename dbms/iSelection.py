@@ -1,6 +1,6 @@
 # Author: Stephen Leer
 # date: 11/02/21
-# version: 1.2
+# version: 2.0
 from abc import ABC, abstractmethod
 import os
 from database import Database
