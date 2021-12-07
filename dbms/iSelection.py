@@ -295,6 +295,8 @@ class LeftOuterJoinSelection(ISelection):
 class CountSelection(ISelection):
     def select_data(self, command, db):
         count = 0
+        argument = command.split()[1].split("(")[1].rstrip(")")
+
         try:
             file_path = os.path.join(os.path.abspath(os.getcwd()), db.name)
             table_to_read = command.split()[command.lower().split().index("from") + 1].rstrip(';')
@@ -307,12 +309,9 @@ class CountSelection(ISelection):
                 else:
                     print(f"Table {table_to_read} is not a valid table.")
                 table_columns = []
-                if command.split()[1] == "*":
+                if argument == "*":
                     for attribute_index in range(len(table_obj.attributes)):
                         table_columns.append(attribute_index)
-                else:
-                    table_columns = get_indices_with_match(
-                        command.split()[1:command.lower().split().index("from")], table_obj)
                 if "where" in command.lower():
                     for conditions in command.split()[command.lower().split().index("where") + 1:]:
                         conditionals.append(conditions.rstrip(";"))
@@ -324,9 +323,101 @@ class CountSelection(ISelection):
                         if not bool(conditionals) or first_line or \
                                 condition_met(line.split(" | "), conditionals, table_obj):
                             if first_line:
-                                print("COUNT(")
-                            first_line = False
+                                print("COUNT(" + argument + ")")
+                                first_line = False
+                            else:
+                                count += 1
+                    print(count)
+            else:
+                print("!Failed to query table {} because it does not exist".format(table_to_read))
+        except:
+            print("Syntax error, failed to select from table.")
 
+
+class AverageSelection(ISelection):
+    def select_data(self, command, db):
+        average = 0
+        count = 0
+        argument = command.split()[1].split("(")[1].rstrip(")")
+
+        try:
+            file_path = os.path.join(os.path.abspath(os.getcwd()), db.name)
+            table_to_read = command.split()[command.lower().split().index("from") + 1].rstrip(';')
+            if os.path.isfile(os.path.join(file_path, table_to_read.lower())):
+                file_path = os.path.join(file_path, table_to_read.lower())
+                conditionals = []
+                table_obj = None
+                if table_to_read in db.table:
+                    table_obj = db.table[db.table.index(table_to_read)]
+                else:
+                    print(f"Table {table_to_read} is not a valid table.")
+                table_columns = get_indices_with_match([argument], table_obj)
+                if "where" in command.lower():
+                    for conditions in command.split()[command.lower().split().index("where") + 1:]:
+                        conditionals.append(conditions.rstrip(";"))
+
+                with open(file_path, 'r') as file_to_read:
+                    lines = file_to_read.readlines()
+                    first_line = True
+                    for line in lines:
+                        if not bool(conditionals) or first_line or \
+                                condition_met(line.split(" | "), conditionals, table_obj):
+                            if first_line:
+                                print("AVG(" + argument + ")")
+                                first_line = False
+                            else:
+                                count += 1
+                                data_pieces = line.split("|")
+
+                                for i in table_columns:
+                                    average += float(data_pieces[i].strip())
+                    if count > 0:
+                        print(average/count)
+                    else:
+                        print(0)
+            else:
+                print("!Failed to query table {} because it does not exist".format(table_to_read))
+        except:
+            print("Syntax error, failed to select from table.")
+
+
+class MaxSelection(ISelection):
+    def select_data(self, command, db):
+        maxVal = 0
+        argument = command.split()[1].split("(")[1].rstrip(")")
+        print(argument)
+        try:
+            file_path = os.path.join(os.path.abspath(os.getcwd()), db.name)
+            table_to_read = command.split()[command.lower().split().index("from") + 1].rstrip(';')
+            if os.path.isfile(os.path.join(file_path, table_to_read.lower())):
+                file_path = os.path.join(file_path, table_to_read.lower())
+                conditionals = []
+                table_obj = None
+                if table_to_read in db.table:
+                    table_obj = db.table[db.table.index(table_to_read)]
+                else:
+                    print(f"Table {table_to_read} is not a valid table.")
+                table_columns = get_indices_with_match([argument], table_obj)
+                if "where" in command.lower():
+                    for conditions in command.split()[command.lower().split().index("where") + 1:]:
+                        conditionals.append(conditions.rstrip(";"))
+
+                with open(file_path, 'r') as file_to_read:
+                    lines = file_to_read.readlines()
+                    first_line = True
+                    for line in lines:
+                        if not bool(conditionals) or first_line or \
+                                condition_met(line.split(" | "), conditionals, table_obj):
+                            if first_line:
+                                print("MAX(" + argument + ")")
+                                first_line = False
+                            else:
+                                data_pieces = line.split("|")
+                                for i in table_columns:
+                                    temp = float(data_pieces[i].strip())
+                                    if maxVal < temp:
+                                        maxVal = temp
+                    print(maxVal)
             else:
                 print("!Failed to query table {} because it does not exist".format(table_to_read))
         except:

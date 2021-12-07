@@ -352,10 +352,15 @@ class DatabaseManagementSystem:
             elif 'join' in command.lower() or 'where' in command.lower() and\
                     len(command.split()[command.lower().split().index('from') + 1:command.lower().split().index('where')]) >= 4:
                 select = InnerJoinSelection()
+            elif 'count' in command.lower():
+                select = CountSelection()
+            elif 'avg' in command.lower():
+                select = AverageSelection()
+            elif 'max' in command.lower():
+                select = MaxSelection()
             else:
                 select = BasicSelection()
             select.select_data(command, self.cur_db)
-
 
     # method responsible for altering a table, now adds a default value based on the type being added to all rows that
     # are already inserted when alter is executed.
